@@ -151,7 +151,10 @@ void acquire_ingredients(int recipeID, int baker_id) {
 
     /* Release semaphore for pantry */
     sem_post(&pantry_sem);
-    if()
+    if(recipeID == 2) { //this is a quick dirty solution based on the hardcoded knowledge that dough doesnt have any ingredients from fridge
+        printf("Baker %d has acquired all ingredients needed!\n", baker->id);
+        break; //break out of function and continue to acquiring kitchen resources
+    }
     /* Acquire semaphore for fridge */
     sem_wait(&fridge_sem);
 
@@ -169,9 +172,9 @@ void acquire_ingredients(int recipeID, int baker_id) {
             printf("Invalid recipe ID.\n");
             break;
     }
-
     /* Release semaphore for fridge */
     sem_post(&fridge_sem);
+    printf("Baker %d has acquired all ingredients needed!\n", baker->id);
 }
 
 void use_kitchen_resources() {
