@@ -159,16 +159,21 @@ void acquire_ingredients(int recipeID, int baker_id) {
     sem_wait(&fridge_sem);
 
     switch(recipeID) {
-        case 1:
-            printf("Grabbed eggs, milk from fridge.\n");
+        case 0: //Cookies
+            printf("Grabbed Milk and Butter from fridge.\n");
             break;
-        case 2:
-            printf("Grabbed eggs from fridge.\n");
+        case 1: //Pancakes
+            printf("Grabbed Milk, Butter, and Eggs from fridge.\n");
             break;
-        case 3:
-            printf("Grabbed butter from fridge.\n");
+        case 2: //dough, do nothing
             break;
-        default:
+        case 3: //Pretzels
+            printf("Grabbed Eggs from fridge.\n");
+            break;
+        case 3: //Cinnamon Rolls
+            printf("Grabbed Butter and Eggs from fridge.\n");
+            break;
+        default: //probably dont need a check here since we are catching in top switch case, we should just break out of function entirly with an error code if required.
             printf("Invalid recipe ID.\n");
             break;
     }
