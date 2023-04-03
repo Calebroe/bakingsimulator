@@ -229,3 +229,26 @@ void bake_recipe(int recipe_id) {
 
     printf("Baker %lu finished baking %s!\n", pthread_self(), recipe_names[recipe_id]);
 }
+
+//function to exit program gracefully
+void cleanup_handler(int sig) {
+    /* Destroy semaphores */    
+    sem_destroy(&pantry_sem);
+    sem_destroy(&fridge_sem);
+    sem_destroy(&mixer_sem);
+    sem_destroy(&bowl_sem);
+    sem_destroy(&spoon_sem);
+    sem_destroy(&oven_sem);
+
+    /* Free memory */
+    free(pantry);
+    free(fridge);
+    //for (i = 0; i < NUM_RECIPES; i++) {
+    //    free(recipe_ingredients[i]);
+    //}
+    free(recipe_ingredients);
+    free(bakers);
+    printf("terminating program. Goodbye.")
+    /* Exit program */
+    exit(0);
+}
