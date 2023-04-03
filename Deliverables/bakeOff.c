@@ -223,10 +223,9 @@ void bake_recipe(int recipe_id) {
     release_kitchen_resources();
 
     use_oven_resource();
+
     release_oven_resource();
-    // Release the acquired ingredients
     //release_ingredients(ingredients); //this will be for ramsie check, will have to have a function that just says baker returned ingredients to fridge and pantry.
 
     printf("Baker %lu finished baking %s!\n", pthread_self(), recipe_names[recipe_id]);
-}
 }
