@@ -176,42 +176,48 @@ void acquire_ingredients(int recipeID, int baker_id) {
 
 void use_kitchen_resources() {
     /* Acquire semaphores for kitchen resources */
-    
     sem_wait(&mixer_sem);
     sem_wait(&bowl_sem);
     sem_wait(&spoon_sem);
-    sem_wait(&oven_sem);
+    //sem_wait(&oven_sem); putting in own acquire function
+    printf("Baker %lu has acquired a mixer, bowl, and spoon to mix ingredients\n", pthread_self());
 }
 
 void release_kitchen_resources() {
     /* Release semaphores for kitchen resources */
-    sem_post(&oven_sem);
+    //sem_post(&oven_sem);
     sem_post(&spoon_sem);
     sem_post(&bowl_sem);
     sem_post(&mixer_sem);
+    printf("Baker %lu has returned a mixer, bowl, and spoon to the kitchen\n", pthread_self());
+}
+
+void use_oven_resource() {
+    /* Acquire semaphore for oven resource */
+    sem_wait(&oven_sem);
+    printf("Baker %lu is baking %s...\n", pthread_self(), recipe_names[recipe_id]);
 }
 
 void bake_recipe(int recipe_id) {
-    printf("Baker %lu is baking %s...\n", pthread_self(), recipe_names[recipe_id]);
+    printf("Baker %lu has begun preparing %s...\n", pthread_self(), recipe_names[recipe_id]);
 
     // Get the required ingredients for the recipe
-    int ingredients[NUM_INGREDIENTS];
-    memcpy(ingredients, recipe_ingredients[recipe_id], NUM_INGREDIENTS * sizeof(int));
+    //int ingredients[NUM_INGREDIENTS];
+    //memcpy(ingredients, recipe_ingredients[recipe_id], NUM_INGREDIENTS * sizeof(int));
 
     // Acquire the required ingredients
-    acquire_ingredients(ingredients);
+    acquire_ingredients(recipe_id, baker -> id);
 
     // Use the kitchen resources
     use_kitchen_resources();
 
-    
     // Release the kitchen resources
     release_kitchen_resources();
 
-    use_kitchen_oven();
-    release_kitchen_oven();
+    use_oven_resource();
+    release_oven_resource();
     // Release the acquired ingredients
-    //release_ingredients(ingredients);
+    //release_ingredients(ingredients); //this will be for ramsie check, will have to have a function that just says baker returned ingredients to fridge and pantry.
 
     printf("Baker %lu finished baking %s!\n", pthread_self(), recipe_names[recipe_id]);
 }
