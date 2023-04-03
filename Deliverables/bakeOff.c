@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <time.h>
 
 #define NUM_RECIPES 5
 #define NUM_INGREDIENTS 9
@@ -18,25 +19,29 @@ int bowl = 3;
 int spoon = 5;
 int oven = 1;
 
+/*check for baker ramsied flag per user*/
+Boolean ramsiedBaker = false; //flag check for ramsied baker option;
+
 /* Recipe data */
 const char *recipe_names[NUM_RECIPES] = {"Cookies", "Pancakes", "Pizza Dough", "Soft Pretzels", "Cinnamon Rolls"};
-int **recipe_ingredients;
 
 /* Baker data */
 struct Baker {
     int id;
-    int *recipes;
-
+    int currentRecipe;
 };
 
 struct Baker *bakers;
 
 /* Function prototypes */
 void *baker_thread(void *arg);
-void acquire_ingredients(int *ingredients);
-void use_kitchen_resources();
-void release_kitchen_resources();
-void bake_recipe(int recipe_id);
+void acquire_ingredients(int recipeID, int baker_id);//function that has a switch case to print ingredients in pantry and a check for if it needs access to fridge ingredients
+void use_kitchen_resources(); //function for using the kitchen resources
+void use_oven_resource(); //function for using the oven resource
+void release_kitchen_resources();//function to release kitchen resources
+void release_oven_resources(); //function to release oven resource
+void bake_recipe(int recipe_id); //function to bake 
+void getStartingRecipe(struct baker *bakerPtr); //used to get a random starting recipe
 
 * Signal handler for cleanup */
 void cleanup_handler(int sig);
@@ -57,45 +62,38 @@ int main() {
     printf("Enter number of bakers (max %d): ", NUM_BAKERS);
     scanf("%d", &num_bakers);
 
-    /* Initialize shared memory */
-    pantry = (int *)malloc(num_ingredients * sizeof(int));
-    fridge = (int *)malloc(num_ingredients * sizeof(int));
-    for (i = 0; i < num_ingredients; i++) {
-        pantry[i] = 2; // start with 2 of each ingredient
-        fridge[i] = 3; // start with 3 of each ingredient
+    char isRamsied; //temp char  for getting user input
+    printf("Do you want bakers to be randomized? (Y/N): ");
+    scanf(" %c", &isRamsied);
+
+    if (isRamsied == 'Y') {
+        ramsiedBaker = true;
+        printf("Bakers now have a chance to be ramsied");    
+    } else {
+        printf("Bakers will not have a chance to be ramsied");    
+    }
+
+    //pantry = (int *)malloc(num_ingredients * sizeof(int));
+    //fridge = (int *)malloc(num_ingredients * sizeof(int));
+    //for (i = 0; i < num_ingredients; i++) {
+    //    pantry[i] = 2; // start with 2 of each ingredient
+    //    fridge[i] = 3; // start with 3 of each ingredient
     }
 
     /* Initialize recipe data */
-    recipe_ingredients = (int **)malloc(NUM_RECIPES * sizeof(int *));
-    for (i = 0; i < NUM_RECIPES; i++) {
-        recipe_ingredients[i] = (int *)malloc(num_ingredients * sizeof(int));
-    }
+    //recipe_ingredients = (int **)malloc(NUM_RECIPES * sizeof(int *));
+    //for (i = 0; i < NUM_RECIPES; i++) {
+    //    recipe_ingredients[i] = (int *)malloc(num_ingredients * sizeof(int));
+    //}
 
-    recipe_ingredients[0][0] = 1;
-    recipe_ingredients[0][1] = 2;
-    recipe_ingredients[0][2] = 3;
-    recipe_ingredients[0][3] = -1;
-
-    recipe_ingredients[1][0] = 1;
-    recipe_ingredients[1][1] = 2;
-    recipe_ingredients[1][2] = 4;
-    recipe_ingredients[1][3] = 5;
-    recipe_ingredients[1][4] = 1;
-    recipe_ingredients[1][5] = 2;
-    recipe_ingredients[1][6] = 3;
-
-    recipe_ingredients[2][0] = 3;
-    recipe_ingredients[2][1] = 2;
-    recipe_ingredients[2][2] = 5;
-    recipe_
-
-    void *baker_thread(void *arg) {
+    void *baker_thread(void *arg) { //we need to heavily modify this function so that we start with a currentrecipeID, then during the while loop, we increment whatever the value is modulo 5 until we hit the starting recipeID again and quit.
     struct Baker *baker = (struct Baker *)arg;
     int i, recipe_id;
-
+    recipe_id = rand() % NUM_RECIPES;
+    baker
     while (1) {
         /* Choose a random recipe to bake */
-        recipe_id = rand() % NUM_RECIPES;
+        //recipe_id = rand() % NUM_RECIPES;
 
         /* Check if the baker knows the recipe */
         if (baker->recipes[recipe_id] == 0) {
@@ -107,7 +105,7 @@ int main() {
             printf("Baker %d is attempting to make %s.\n", baker->id, recipe_names[recipe_id]);
 
             /* Acquire necessary ingredients */
-            acquire_ingredients(recipe_ingredients[recipe_id]);
+            acquire_ingredients(recipe_ingredients[recipe_id], baker->id);
 
             /* Use kitchen resources */
             use_kitchen_resources();
@@ -126,45 +124,50 @@ int main() {
     }
 }
 
-void acquire_ingredients(int *ingredients) {
-    int i;
-
+void acquire_ingredients(int recipeID, int baker_id) {
     /* Acquire semaphore for pantry */
     sem_wait(&pantry_sem);
 
-    /* Check pantry for each ingredient */
-    for (i = 0; i < NUM_INGREDIENTS && ingredients[i] != -1; i++) {
-        while (pantry[ingredients[i]] == 0) {
-            /* Ingredient is not available, release pantry semaphore and wait for it to be restocked */
-            sem_post(&pantry_sem);
-            printf("Acquiring more %s from the store.\n", ingredient_names[ingredients[i]]);
-            sleep(5); // simulate time to go to the store and restock pantry
-            sem_wait(&pantry_sem);
-        }
-        /* Ingredient is available, decrement pantry count */
-        pantry[ingredients[i]]--;
+    switch(recipeID) {
+        case 0: //Cookies
+            printf("Baker %d grabbed Flour and Sugar from pantry.\n", baker->id);
+            break;
+        case 1: //Pancakes
+            printf("Baker %d grabbed Flour, Sugar, Baking Soda, and Salt from pantry.\n", baker->id);
+            break;
+        case 2: //Pizza Dough
+            printf("Baker %d grabbed Sugar, Salt, and Yeast from pantry.\n", baker->id);
+            break;
+        case 3: //Pretzels
+            printf("Baker %d grabbed Flour, Sugar, Baking Soda, Salt, and Yeast from pantry.\n", baker->id);
+            break;
+        case 4: //Cinnamon Rolls
+            printf("Baker %d grabbed Flour, Sugar, Salt, and Cinnamon from pantry.\n", baker->id);
+            break;
+        default:
+            printf("Invalid recipe! Baker %d is going back to double check cookbook...\n", baker->id);
+            break;
     }
-
-    swtich case
-    if recipeID == 1 print "grabbed flour, salt, sugar from pantry"
 
     /* Release semaphore for pantry */
     sem_post(&pantry_sem);
-
+    if()
     /* Acquire semaphore for fridge */
     sem_wait(&fridge_sem);
 
-    /* Check fridge for each ingredient */
-    for (i = 0; i < NUM_INGREDIENTS && ingredients[i] != -1; i++) {
-        while (fridge[ingredients[i]] == 0) {
-            /* Ingredient is not available, release fridge semaphore and wait for it to be restocked */
-            sem_post(&fridge_sem);
-            printf("Acquiring more %s from the store.\n", ingredient_names[ingredients[i]]);
-            sleep(5); // simulate time to go to the store and restock fridge
-            sem_wait(&fridge_sem);
-        }
-        /* Ingredient is available, decrement fridge count */
-        fridge[ingredients[i]]--;
+    switch(recipeID) {
+        case 1:
+            printf("Grabbed eggs, milk from fridge.\n");
+            break;
+        case 2:
+            printf("Grabbed eggs from fridge.\n");
+            break;
+        case 3:
+            printf("Grabbed butter from fridge.\n");
+            break;
+        default:
+            printf("Invalid recipe ID.\n");
+            break;
     }
 
     /* Release semaphore for fridge */
