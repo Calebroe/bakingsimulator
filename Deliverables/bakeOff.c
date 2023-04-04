@@ -36,12 +36,12 @@ struct Baker *bakers;
 
 /* Function prototypes */
 void *baker_thread(void *arg);
-void aquireIngredients(int recipeID, int baker_id);//function that has a switch case to print ingredients in pantry and a check for if it needs access to fridge ingredients
-void getKitchenResources(); //function for using the kitchen resources
-void useOven(); //function for using the oven resource
-void releaseKitchenResources();//function to release kitchen resources
-void release_oven_resources(); //function to release oven resource
-void bake_recipe(int recipe_id); //function to bake 
+void aquireIngredients(int recipeID, int bakerId);//function that has a switch case to print ingredients in pantry and a check for if it needs access to fridge ingredients
+void getKitchenResources(int bakerId); //function for using the kitchen resources
+void useOven(int bakerId); //function for using the oven resource
+void releaseKitchenResources(int bakerId);//function to release kitchen resources
+void release_oven_resources(int bakerId); //function to release oven resource
+void bake_recipe(int recipeID); //function to bake 
 void getStartingRecipe(struct baker *bakerPtr); //used to get a random starting recipe
 
 /* Signal handler for cleanup */
@@ -102,7 +102,6 @@ int main() {
         return 1;
     }
     printf("Baker %d is done baking all their recipies.\n", i);
-
     return 0
 }
     
@@ -118,15 +117,13 @@ void *baker_thread(void *arg) { //we need to heavily modify this function so tha
     int currentRecipe = recipe_id;
 
     while (1) {            
-        /* If the baker already knows the recipe, attempt to bake it */
-        printf("Baker %d is attempting to make %s.\n", baker->id, baker->currentRecipe);
+        printf("Baker %d is attempting to make %s.\n", baker->id, recipe_names[currentRecipe]);
 
         /* Acquire necessary ingredients */
         aquireIngredients(recipe_ingredients[baker->currentRecipe], baker->id);
         
         /* Use kitchen resources */
-        getKitchenResources();
-        printf("Baker %d has acquired a mixer, bowl, and spoon to mix ingredients\n", baker->id);
+        getKitchenResources(baker->id);
 
         /* Check if baker has been ramsied */
         if(ramsiedBaker == true) {
@@ -142,8 +139,7 @@ void *baker_thread(void *arg) { //we need to heavily modify this function so tha
         }
 
         /* Release kitchen resources */
-        releaseKitchenResources();
-        printf("Baker %d has released the mixer, bowl, and spoon.\n", baker->id);
+        releaseKitchenResources(baker->id);
 
         /* Bake the recipe */
         useOven(baker->id, currentRecipe);
@@ -165,7 +161,6 @@ void *baker_thread(void *arg) { //we need to heavily modify this function so tha
 }
 
 void aquireIngredients(int recipeID, int bakerID) {
-
     /* Acquire semaphore for pantry */
     sem_wait(&pantry_sem);
 
@@ -192,8 +187,7 @@ void aquireIngredients(int recipeID, int bakerID) {
 
     sem_post(&pantry_sem);
 
-    // if the recipe is dough, we dont need to acquire anything from the fridge
-    if(recipeID == 2) {
+    if(recipeID == 2) {// if the recipe is dough, we dont need to acquire anything from the fridge
         printf("Baker %d has acquired all ingredients needed!\n", baker->id);
         break; //break out of function and continue to acquiring kitchen resources
     }
@@ -221,22 +215,23 @@ void aquireIngredients(int recipeID, int bakerID) {
     }
     // release semaphore for fridge
     sem_post(&fridge_sem);
-
     printf("Baker %d has acquired all ingredients needed!\n", baker->id);
 }
 
-void getKitchenResources() {
+void getKitchenResources(int bakerId) {
     /* Acquire semaphores for kitchen resources */
     sem_wait(&mixer_sem);
     sem_wait(&bowl_sem);
     sem_wait(&spoon_sem);
+    printf("Baker %d has acquired a mixer, bowl, and spoon to mix ingredients\n", bakerId);
 }
 
-void releaseKitchenResources() {
+void releaseKitchenResources(int bakerId) {
     /* Release semaphores for kitchen resources */
     sem_post(&spoon_sem);
     sem_post(&bowl_sem);
     sem_post(&mixer_sem);
+    printf("Baker %d has released the mixer, bowl, and spoon.\n", bakerId);
 }
 
 void useOven(int bakerID, int recipeID) {
