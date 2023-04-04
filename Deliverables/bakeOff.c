@@ -128,7 +128,7 @@ void *baker_thread(void *arg) { //we need to heavily modify this function so tha
         /* Check if baker has been ramsied */
         if(ramsiedBaker == true) {
             int random_num = rand() % 100; 
-            if (random_num < percentChanceRamsied && ramsiedBaker == true) {
+            if (random_num <= percentChanceRamsied && ramsiedBaker == true) { //up to and including user val
                 printf("Baker %d has been ramsied and will not be able to bake %s.\n", baker->id, recipe_names[currentRecipe]);
                 printf("Baker %d has return ingredients to fridge and pantry.\n", baker->id);
                 releaseKitchenResources(baker->id);
