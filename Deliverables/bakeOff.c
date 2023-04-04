@@ -44,7 +44,7 @@ void release_oven_resources(); //function to release oven resource
 void bake_recipe(int recipe_id); //function to bake 
 void getStartingRecipe(struct baker *bakerPtr); //used to get a random starting recipe
 
-* Signal handler for cleanup */
+/* Signal handler for cleanup */
 void cleanup_handler(int sig);
 
 int main() {
