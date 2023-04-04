@@ -67,7 +67,6 @@ int main() {
     printf("Do you want bakers to be randomized? (Y/N): ");
     scanf(" %c", &isRamsied);
 
-
     if (isRamsied == 'Y') {
         ramsiedBaker = true;
         printf("Enter the percent chance that a baker will be ramsied: ");
@@ -76,8 +75,6 @@ int main() {
     } else {
         printf("Bakers will not have a chance to be ramsied");    
     }
-
-
 
     // DO WE NEED singal() handler here?
     // DO WE NEED threadStatus and joinStatus here?
@@ -104,7 +101,7 @@ int main() {
         fprintf(stderr, "Error joining thread %d: %s\n", i, ret);
         return 1;
     }
-    printf("Baker %d is done baking.\n", i);
+    printf("Baker %d is done baking all their recipies.\n", i);
 
     return 0
 }
@@ -121,47 +118,38 @@ void *baker_thread(void *arg) { //we need to heavily modify this function so tha
     int currentRecipe = recipe_id;
 
     while (1) {            
+        /* If the baker already knows the recipe, attempt to bake it */
+        printf("Baker %d is attempting to make %s.\n", baker->id, baker->currentRecipe);
 
-        // if the baker has not learned the recipe, learn it
-        if (baker->recipes[currentRecipe] == 0) {
-            printf("Baker %d is learning how to make %s.\n", baker->id, recipe_names[currentRecipe]);
-            baker->recipes[currentRecipe] = 1;
-        } 
-        // if the baker has learned the recipe, attempt to bake it
-        else {
+        /* Acquire necessary ingredients */
+        aquireIngredients(recipe_ingredients[baker->currentRecipe], baker->id);
+        
+        /* Use kitchen resources */
+        getKitchenResources();
+        printf("Baker %d has acquired a mixer, bowl, and spoon to mix ingredients\n", baker->id);
 
-            /* If the baker already knows the recipe, attempt to bake it */
-            printf("Baker %d is attempting to make %s.\n", baker->id, baker->currentRecipe);
-
-            /* Acquire necessary ingredients */
-            aquireIngredients(recipe_ingredients[baker->currentRecipe], baker->id);
-            
-            /* Use kitchen resources */
-            getKitchenResources();
-            printf("Baker %d has acquired a mixer, bowl, and spoon to mix ingredients\n", baker->id);
-
-            /* Check if baker has been ramsied */
-            if(ramsiedBaker == true) {
-                int random_num = rand() % 100; 
-                if (random_num < percentChanceRamsied && ramsiedBaker == true) {
-                    printf("Baker %d has been ramsied and will not be able to bake %s.\n", baker->id, recipe_names[currentRecipe]);
-                    releaseKitchenResources();
-                    printf("Baker %d has released the mixer, bowl, and spoon.\n", baker->id);
-                    // if the baker has been ramsied, go back to beginning of loop
-                    continue;             
-                }
-
-            /* Bake the recipe */
-            useOven(baker->id, currentRecipe);
-
-            /* Release kitchen resources */
-            releaseKitchenResources();
-            printf("Baker %d has released the mixer, bowl, and spoon.\n", baker->id);
-
-
-            // finished currentRecipe
-            printf("Baker %d has made %s.\n", baker->id, recipe_names[currentRecipe]);
+        /* Check if baker has been ramsied */
+        if(ramsiedBaker == true) {
+            int random_num = rand() % 100; 
+            if (random_num < percentChanceRamsied && ramsiedBaker == true) {
+                printf("Baker %d has been ramsied and will not be able to bake %s.\n", baker->id, recipe_names[currentRecipe]);
+                printf("Baker %d has return ingredients to fridge and pantry.\n", baker->id);
+                releaseKitchenResources();
+                printf("Baker %d has released the mixer, bowl, and spoon.\n", baker->id);
+                // if the baker has been ramsied, go back to beginning of loop
+                continue;             
+            }
         }
+
+        /* Release kitchen resources */
+        releaseKitchenResources();
+        printf("Baker %d has released the mixer, bowl, and spoon.\n", baker->id);
+
+        /* Bake the recipe */
+        useOven(baker->id, currentRecipe);
+
+        // finished currentRecipe
+        printf("Baker %d has made %s.\n", baker->id, recipe_names[currentRecipe]);
 
         /* Sleep for a random amount of time between 1 and 5 seconds */
         sleep(rand() % 5 + 1);
@@ -174,7 +162,6 @@ void *baker_thread(void *arg) { //we need to heavily modify this function so tha
             break;
         }
     }
-
 }
 
 void aquireIngredients(int recipeID, int bakerID) {
@@ -238,14 +225,12 @@ void aquireIngredients(int recipeID, int bakerID) {
     printf("Baker %d has acquired all ingredients needed!\n", baker->id);
 }
 
-
 void getKitchenResources() {
     /* Acquire semaphores for kitchen resources */
     sem_wait(&mixer_sem);
     sem_wait(&bowl_sem);
     sem_wait(&spoon_sem);
 }
-
 
 void releaseKitchenResources() {
     /* Release semaphores for kitchen resources */
@@ -254,19 +239,14 @@ void releaseKitchenResources() {
     sem_post(&mixer_sem);
 }
 
-
 void useOven(int bakerID, int recipeID) {
     /* Acquire semaphore for oven resource */
     sem_wait(&oven_sem);
-    
     printf("Baker %d is baking %s...\n", bakerID, recipe_names[recipeID]);
+    sleep(5); //mimic baking in oven
     sem_post(&oven_sem);
     printf("Baker %d finished baking %s!\n", bakerID, recipe_names[recipeID]);
-
 }
-
-
-
 
 //function to exit program gracefully
 void cleanup_handler(int sig) {
@@ -278,15 +258,9 @@ void cleanup_handler(int sig) {
     sem_destroy(&spoon_sem);
     sem_destroy(&oven_sem);
 
-    /* Free memory */
-    //free(pantry);
-    //free(fridge);
-    //for (i = 0; i < NUM_RECIPES; i++) {
-    //    free(recipe_ingredients[i]);
-    //}
     free(recipe_ingredients);
     free(bakers);
-    printf("terminating program. Goodbye.")
+    printf("Terminating program. Goodbye.")
     /* Exit program */
     exit(0);
 }
