@@ -131,8 +131,7 @@ void *baker_thread(void *arg) { //we need to heavily modify this function so tha
             if (random_num < percentChanceRamsied && ramsiedBaker == true) {
                 printf("Baker %d has been ramsied and will not be able to bake %s.\n", baker->id, recipe_names[currentRecipe]);
                 printf("Baker %d has return ingredients to fridge and pantry.\n", baker->id);
-                releaseKitchenResources();
-                printf("Baker %d has released the mixer, bowl, and spoon.\n", baker->id);
+                releaseKitchenResources(baker->id);
                 // if the baker has been ramsied, go back to beginning of loop
                 continue;             
             }
@@ -231,7 +230,7 @@ void releaseKitchenResources(int bakerId) {
     sem_post(&spoon_sem);
     sem_post(&bowl_sem);
     sem_post(&mixer_sem);
-    printf("Baker %d has released the mixer, bowl, and spoon.\n", bakerId);
+    printf("Baker %d has returned the mixer, bowl, and spoon.\n", bakerId);
 }
 
 void useOven(int bakerID, int recipeID) {
