@@ -11,7 +11,7 @@
 #define MAX_BAKERS 10
 
 /* Semaphore declarations */
-sem_t pantry_sem, fridge_sem, mixer_sem, bowl_sem, spoon_sem, oven_sem;
+sem_t pantrySem, fridgeSem, mixerSem, bowlSem, spoonSem, ovenSem;
 
 /* Shared memory declarations 
 int *pantry;
@@ -40,9 +40,9 @@ struct Baker bakers[MAX_BAKERS];
 
 /* Function prototypes */
 void *bakerThread(void *arg);
-void aquireIngredients(int recipeID, int baker_id);//function that has a switch case to print ingredients in pantry and a check for if it needs access to fridge ingredients
-void getKitchenResources(); //function for using the kitchen resources
-void useOven(); //function for using the oven resource
+void aquireIngredients(int recipeID, int bakerID);//function that has a switch case to print ingredients in pantry and a check for if it needs access to fridge ingredients
+void getKitchenResources(int bakerID); //function for using the kitchen resources
+void useOven(int recipeID, int bakerID); //function for using the oven resource
 void releaseKitchenResources();//function to release kitchen resources
 
 /* Signal handler for cleanup */
@@ -53,12 +53,12 @@ int main() {
     int i, j, num_ingredients;
     
     /* Initialize semaphores */
-    sem_init(&pantry_sem, 0, 1);
-    sem_init(&fridge_sem, 0, 2);
-    sem_init(&mixer_sem, 0, 2);
-    sem_init(&bowl_sem, 0, 3);
-    sem_init(&spoon_sem, 0, 5);
-    sem_init(&oven_sem, 0, 1);
+    sem_init(&pantrySem, 0, 1);
+    sem_init(&fridgeSem, 0, 2);
+    sem_init(&mixerSem, 0, 2);
+    sem_init(&bowlSem, 0, 3);
+    sem_init(&spoonSem, 0, 5);
+    sem_init(&ovenSem, 0, 1);
 
     
     signal(SIGINT, cleanup_handler);
@@ -156,21 +156,23 @@ void *bakerThread(void *arg) {
                 }
             }
 
-        /* Bake the recipe */
-        useOven(baker->id, currentRecipe);
+            /* Bake the recipe */
+            useOven(currentRecipe, baker->id);
 
-        // finished currentRecipe
-        printf("Baker %d has made %s.\n", baker->id, recipeNames[currentRecipe]);
+            // finished currentRecipe
+            printf("Baker %d has made %s.\n", baker->id, recipeNames[currentRecipe]);
 
-        /* Sleep for a random amount of time between 1 and 5 seconds */
-        sleep(rand() % 5 + 1);
+            /* Release kitchen resources */
+            releaseKitchenResources();
+            printf("Baker %d has returned the mixer, bowl, and spoon.\n", baker->id);
 
-        /* Increment currentRecipe */
-        currentRecipe = (currentRecipe + 1) % NUM_RECIPES;
+            /* Increment currentRecipe */
+            currentRecipe = (currentRecipe + 1) % NUM_RECIPES;
 
-        // if the baker has gone through all the recipes, break out of the loop
-        if(currentRecipe == baker->firstRecipeId) {
-            break;
+            // if the baker has gone through all the recipes, break out of the loop
+            if(currentRecipe == baker->firstRecipeId) {
+                break;
+            }
         }
     }
 
@@ -238,23 +240,21 @@ void aquireIngredients(int recipeID, int bakerID) {
     printf("Baker %d has acquired all ingredients needed!\n", bakerID);
 }
 
-void getKitchenResources(int bakerId) {
+void getKitchenResources() {
     /* Acquire semaphores for kitchen resources */
     sem_wait(&mixer_sem);
     sem_wait(&bowl_sem);
     sem_wait(&spoon_sem);
-    printf("Baker %d has acquired a mixer, bowl, and spoon to mix ingredients\n", bakerId);
 }
 
-void releaseKitchenResources(int bakerId) {
+void releaseKitchenResources() {
     /* Release semaphores for kitchen resources */
     sem_post(&spoon_sem);
     sem_post(&bowl_sem);
     sem_post(&mixer_sem);
-    printf("Baker %d has returned the mixer, bowl, and spoon.\n", bakerId);
 }
 
-void useOven(int bakerID, int recipeID) {
+void useOven(int recipeID, int bakerID) {
     /* Acquire semaphore for oven resource */
     sem_wait(&oven_sem);
     printf("Baker %d is baking %s...\n", bakerID, recipeNames[recipeID]);
