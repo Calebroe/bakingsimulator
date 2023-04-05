@@ -47,10 +47,9 @@ void releaseKitchenResources();//function to release kitchen resources
 
 /* Signal handler for cleanup */
 /* Signal handler for cleanup */
-void cleanup_handler(int sig);
+void cleanupHandler(int sig);
 
 int main() {
-    int i, j, num_ingredients;
     
     /* Initialize semaphores */
     sem_init(&pantrySem, 0, 1);
@@ -61,7 +60,7 @@ int main() {
     sem_init(&ovenSem, 0, 1);
 
     
-    signal(SIGINT, cleanup_handler);
+    signal(SIGINT, cleanupHandler);
 
 
     /* Prompt user for number of bakers */
@@ -264,7 +263,7 @@ void useOven(int recipeID, int bakerID) {
 }
 
 //function to exit program gracefully
-void cleanup_handler(int sig) {
+void cleanupHandler(int sig) {
     /* Destroy semaphores */    
     sem_destroy(&pantry_sem);
     sem_destroy(&fridge_sem);
