@@ -105,7 +105,7 @@ int main() {
     sem_destroy(&bowlSem);
     sem_destroy(&spoonSem);
     sem_destroy(&ovenSem);
-    
+
     return 0;
 }
     
@@ -214,7 +214,7 @@ void aquireIngredients(int recipeID, int bakerID) {
     }
 
     sem_post(&pantrySem);
-
+    sleep(2);
     // if the recipe is dough, we dont need to acquire anything from the fridge
     if(recipeID == 2) {
         printf("Baker %d has acquired all ingredients needed!\n", bakerID);
@@ -225,7 +225,7 @@ void aquireIngredients(int recipeID, int bakerID) {
 
     switch(recipeID) {
         case 0: //Cookies
-            printf("Baaker %d Grabbed Milk and Butter from fridge.\n", bakerID);
+            printf("Baker %d Grabbed Milk and Butter from fridge.\n", bakerID);
             break;
         case 1: //Pancakes
             printf("Baker %d Grabbed Milk, Butter, and Eggs from fridge.\n", bakerID);
