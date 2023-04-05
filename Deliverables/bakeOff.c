@@ -97,6 +97,15 @@ int main() {
         }
         printf("Baker %d is done baking.\n", i);
     }
+
+    /* Cleanup */
+    sem_destroy(&pantrySem);
+    sem_destroy(&fridgeSem);
+    sem_destroy(&mixerSem);
+    sem_destroy(&bowlSem);
+    sem_destroy(&spoonSem);
+    sem_destroy(&ovenSem);
+    
     return 0;
 }
     
