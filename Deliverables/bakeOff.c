@@ -46,6 +46,7 @@ void useOven(); //function for using the oven resource
 void releaseKitchenResources();//function to release kitchen resources
 
 /* Signal handler for cleanup */
+/* Signal handler for cleanup */
 void cleanup_handler(int sig);
 
 int main() {
@@ -72,7 +73,6 @@ int main() {
     printf("Do you want bakers to be randomized? (Y/N): ");
     scanf(" %c", &isRamsied);
 
-
     if (isRamsied == 'Y') {
         ramsiedBaker = true;
         printf("Enter the percent chance that a baker will be ramsied as an integer: ");
@@ -81,8 +81,6 @@ int main() {
     } else {
         printf("Bakers will not have a chance to be ramsied\n");    
     }
-
-
 
     // DO WE NEED singal() handler here?
     // DO WE NEED threadStatus and joinStatus here?
@@ -158,17 +156,11 @@ void *bakerThread(void *arg) {
                 }
             }
 
-            /* Bake the recipe */
-            useOven(baker->id, currentRecipe);
+        /* Bake the recipe */
+        useOven(baker->id, currentRecipe);
 
-            /* Release kitchen resources */
-            releaseKitchenResources();
-            printf("Baker %d has released the mixer, bowl, and spoon.\n", baker->id);
-
-
-            // finished currentRecipe
-            printf("Baker %d has made %s.\n", baker->id, recipeNames[currentRecipe]);
-        }
+        // finished currentRecipe
+        printf("Baker %d has made %s.\n", baker->id, recipeNames[currentRecipe]);
 
         /* Sleep for a random amount of time between 1 and 5 seconds */
         sleep(rand() % 5 + 1);
@@ -187,7 +179,6 @@ void *bakerThread(void *arg) {
 }
 
 void aquireIngredients(int recipeID, int bakerID) {
-
     /* Acquire semaphore for pantry */
     sem_wait(&pantry_sem);
 
@@ -247,35 +238,30 @@ void aquireIngredients(int recipeID, int bakerID) {
     printf("Baker %d has acquired all ingredients needed!\n", bakerID);
 }
 
-
-void getKitchenResources() {
+void getKitchenResources(int bakerId) {
     /* Acquire semaphores for kitchen resources */
     sem_wait(&mixer_sem);
     sem_wait(&bowl_sem);
     sem_wait(&spoon_sem);
+    printf("Baker %d has acquired a mixer, bowl, and spoon to mix ingredients\n", bakerId);
 }
 
-
-void releaseKitchenResources() {
+void releaseKitchenResources(int bakerId) {
     /* Release semaphores for kitchen resources */
     sem_post(&spoon_sem);
     sem_post(&bowl_sem);
     sem_post(&mixer_sem);
+    printf("Baker %d has returned the mixer, bowl, and spoon.\n", bakerId);
 }
-
 
 void useOven(int bakerID, int recipeID) {
     /* Acquire semaphore for oven resource */
     sem_wait(&oven_sem);
-    
     printf("Baker %d is baking %s...\n", bakerID, recipeNames[recipeID]);
+    sleep(5); //mimic baking in oven
     sem_post(&oven_sem);
     printf("Baker %d finished baking %s!\n", bakerID, recipeNames[recipeID]);
-
 }
-
-
-
 
 //function to exit program gracefully
 void cleanup_handler(int sig) {
