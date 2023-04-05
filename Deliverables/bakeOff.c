@@ -40,6 +40,7 @@ void exitHandler (int sigNum);
 
 int main() {
 
+
     /* Initialize semaphores */
     sem_init(&pantrySem, 0, 1);
     sem_init(&fridgeSem, 0, 2);
@@ -55,7 +56,7 @@ int main() {
     scanf("%d", &numBakers);
 
     char isRamsied; //temp char  for getting user input
-    printf("Do you want bakers to be randomized? (Y/N): ");
+    printf("Do you want a baker to have a chance to be ramsied? (Y/N): ");
     scanf(" %c", &isRamsied);
 
     if (isRamsied == 'Y') {
@@ -72,6 +73,8 @@ int main() {
 
     pthread_t threads[numBakers];
     int inputs[numBakers];
+
+    sleep(2); 
 
     /* Initialize bakers */
     for(int i = 0; i < numBakers; i++) {
@@ -98,6 +101,8 @@ int main() {
 }
     
 void *bakerThread(void *arg) { 
+
+
     int bakerID = *(int *)arg;
     struct Baker *baker = &bakers[bakerID];
     // this takes the of the argument passed in and sets it to the baker id
@@ -113,6 +118,7 @@ void *bakerThread(void *arg) {
         // if the baker has not learned the recipe, learn it
         if (baker->recipes[currentRecipe] == 0) {
             printf("Baker %d is learning how to make %s.\n", baker->id, recipeNames[currentRecipe]);
+            sleep(2);
             baker->recipes[currentRecipe] = 1;
         } 
         // if the baker has learned the recipe, attempt to bake it
@@ -120,21 +126,25 @@ void *bakerThread(void *arg) {
 
             /* If the baker already knows the recipe, attempt to bake it */
             printf("Baker %d is attempting to make %s.\n", baker->id, recipeNames[currentRecipe]);
+            sleep(2);
 
             /* Acquire necessary ingredients */
             aquireIngredients(currentRecipe, baker->id);
+            sleep(2);
             
             /* Use kitchen resources */
             getKitchenResources(baker->id);
+            sleep(2);
 
             /* Check if baker has been ramsied */
             if(ramsiedBaker == 1) {
                 srand(time(NULL)); //seed random number generator
                 int random_num = rand() % 100; 
                 if (random_num < percentChanceRamsied && ramsiedBaker == 1) {
-                    printf("Baker %d has been ramsied and will not be able to bake %s.\n", baker->id, recipeNames[currentRecipe]);
+                    printf("Baker %d ramsied. RESTART YOU TOSSER!!!!!!!! %s.\n", baker->id, recipeNames[currentRecipe]);
                     releaseKitchenResources();
                     printf("Baker %d has released the mixer, bowl, and spoon.\n", baker->id);
+                    sleep(1);
                     // if the baker has been ramsied, go back to beginning of loop
                     continue;             
                 }
@@ -142,13 +152,16 @@ void *bakerThread(void *arg) {
 
             /* Bake the recipe */
             useOven(currentRecipe, baker->id);
+            sleep(2);
 
             // finished currentRecipe
             printf("Baker %d has made %s.\n", baker->id, recipeNames[currentRecipe]);
+            sleep(2);
 
             /* Release kitchen resources */
             releaseKitchenResources();
             printf("Baker %d has returned the mixer, bowl, and spoon.\n", baker->id);
+            sleep(2);
 
             /* Increment currentRecipe */
             currentRecipe = (currentRecipe + 1) % NUM_RECIPES;
@@ -159,7 +172,10 @@ void *bakerThread(void *arg) {
             }
         }
     }
-    sleep(5);
+
+
+
+    sleep(2);
     return NULL;
 }
 
@@ -200,18 +216,18 @@ void aquireIngredients(int recipeID, int bakerID) {
 
     switch(recipeID) {
         case 0: //Cookies
-            printf("Grabbed Milk and Butter from fridge.\n");
+            printf("Baaker %d Grabbed Milk and Butter from fridge.\n", bakerID);
             break;
         case 1: //Pancakes
-            printf("Grabbed Milk, Butter, and Eggs from fridge.\n");
+            printf("Baker %d Grabbed Milk, Butter, and Eggs from fridge.\n", bakerID);
             break;
         case 2: //dough, do nothing
             break;
         case 3: //Pretzels
-            printf("Grabbed Eggs from fridge.\n");
+            printf("Baker %d Grabbed Eggs from fridge.\n", bakerID);
             break;
         case 4: //Cinnamon Rolls
-            printf("Grabbed Butter and Eggs from fridge.\n");
+            printf("Baker %d Grabbed Butter and Eggs from fridge.\n", bakerID);
             break;
         default: //probably dont need a check here since we are catching in top switch case, we should just break out of function entirly with an error code if required.
             printf("Invalid recipe ID.\n");
@@ -258,7 +274,7 @@ void exitHandler (int sigNum) {
     sem_destroy(&ovenSem);
 
     //free(bakers);
-    printf("terminating program. Goodbye.");
+    printf("\nterminating program. Goodbye.\n");
     /* Exit program */
     exit(0);
 }
