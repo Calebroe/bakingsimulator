@@ -105,6 +105,8 @@ int main() {
     sem_destroy(&bowlSem);
     sem_destroy(&spoonSem);
     sem_destroy(&ovenSem);
+    memset(bakers, 0, sizeof(bakers));
+
 
     return 0;
 }
@@ -282,6 +284,13 @@ void exitHandler (int sigNum) {
     sem_destroy(&spoonSem);
     sem_destroy(&ovenSem);
 
+    memset(bakers, 0, sizeof(bakers));
+
+    /*
+    for(int i = 0; i < MAX_BAKERS; i++){
+        free(bakers[i]);
+    }
+    */
     //free(bakers);
     printf("\nterminating program. Goodbye.\n");
     /* Exit program */
