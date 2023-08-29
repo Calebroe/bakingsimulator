@@ -1,4 +1,4 @@
-# CIS-452---Project-2
+# CIS-452- Operating Systems - Final Project 2
  The "Baker Simulator" is a multi-threaded program written in C that simulates a group of bakers working together in a kitchen environment to bake various recipes. The program employs pthreads for concurrent execution and utilizes semaphores for resource management. It provides an engaging simulation of bakers learning, gathering ingredients, using kitchen resources, baking, and interacting with potential challenges such as being "ramsied."
 
 Key Features:
